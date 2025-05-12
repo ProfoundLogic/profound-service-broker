@@ -46,8 +46,6 @@ export const startServer = async () => {
     logger.info('Data Source has been initialized!')
 
     const authenticator = await Authenticator.build({
-      basicAuthUsername: process.env.BROKER_BASIC_USERNAME as string,
-      basicAuthPassword: process.env.BROKER_BASIC_USERNAME as string,
       allowlistedIds: (process.env.BROKER_BEARER_IDENTITIES as string)?.split(
         ',',
       ),

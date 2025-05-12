@@ -7,21 +7,16 @@ import logger from '../utils/logger'
 
 const KEYS_ENDPOINT = `${process.env.IAM_ENDPOINT as string}/identity/keys`
 
-interface IAMIdentityKeysResponse {
+interface identityKeysResponse {
   keys: JsonWebKey[]
 }
 
 interface AuthenticatorParams {
-  basicAuthUsername: string
-  basicAuthPassword: string
   allowlistedIds: string[]
 }
 export class Authenticator {
-  private IAMPublicKeys: JsonWebKey[] = []
-  private basicAuthUsername: string
-  private basicAuthPassword: string
+  private publicKeys: JsonWebKey[] = []
   private allowlistedIds: Set<string>
-  private basicCredential: string
   private intervalHandle: NodeJS.Timeout | undefined
 
   public static async build(params: AuthenticatorParams) {
@@ -30,22 +25,13 @@ export class Authenticator {
     return instance
   }
 
-  constructor({
-    allowlistedIds,
-    basicAuthPassword,
-    basicAuthUsername,
-  }: AuthenticatorParams) {
+  constructor({ allowlistedIds }: AuthenticatorParams) {
     this.allowlistedIds = new Set(allowlistedIds)
-    this.basicAuthPassword = basicAuthPassword
-    this.basicAuthUsername = basicAuthUsername
-    this.basicCredential = Buffer.from(
-      `${basicAuthUsername}:${basicAuthPassword}`,
-    ).toString('base64')
   }
 
   private async fetchIdentityKeys(): Promise<JsonWebKey[]> {
     try {
-      const resp = await axios.get<IAMIdentityKeysResponse>(KEYS_ENDPOINT)
+      const resp = await axios.get<identityKeysResponse>(KEYS_ENDPOINT)
       return resp.data.keys
     } catch (e) {
       logger.error(`Error fetching IAM Identity keys ${e}`)
@@ -54,10 +40,10 @@ export class Authenticator {
   }
 
   public async init(): Promise<void> {
-    this.IAMPublicKeys = await this.fetchIdentityKeys()
+    this.publicKeys = await this.fetchIdentityKeys()
     const to = setInterval(
       async arg => {
-        arg.IAMPublicKeys = await arg.fetchIdentityKeys()
+        arg.publicKeys = await arg.fetchIdentityKeys()
       },
       20 * 60 * 1000,
       this,
@@ -72,7 +58,7 @@ export class Authenticator {
       throw new Error('token could not be decoded')
     }
     const { kid, alg } = decodedToken.header
-    const matchingKey = this.IAMPublicKeys.find(
+    const matchingKey = this.publicKeys.find(
       key => key.kid === kid && key.alg === alg,
     )
 
@@ -92,10 +78,6 @@ export class Authenticator {
       logger.error(e)
       throw new Error('invalid token')
     }
-  }
-
-  private authorizeBasicCredential(credential: string): boolean {
-    return credential === this.basicCredential
   }
 
   private authorizeBearerCredential(credential: string): boolean {
@@ -136,13 +118,10 @@ export class Authenticator {
       return res.sendStatus(401)
     }
 
+    // More authentication types can be supported here
+    // Removed support for Basic and Bearer authTypes as they are deprecated
     switch (authType.toLowerCase()) {
-      case 'basic':
-        if (!this.authorizeBasicCredential(credentials)) {
-          return res.sendStatus(403)
-        }
-        break
-      case 'bearer':
+      case 'bearer-crn':
         if (!this.authorizeBearerCredential(credentials)) {
           return res.sendStatus(403)
         }
