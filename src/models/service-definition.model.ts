@@ -15,9 +15,8 @@ export class ServiceDefinition {
   @IsString()
   description: string
 
-  @IsOptional()
   @IsBoolean()
-  bindable?: boolean
+  bindable: boolean
 
   @IsOptional()
   @IsBoolean()
@@ -43,7 +42,7 @@ export class ServiceDefinition {
     name: string,
     description: string,
     plans: Plan[],
-    bindable?: boolean,
+    bindable: boolean,
     planUpdateable?: boolean,
     tags?: string[],
     metadata?: Record<string, any>,
