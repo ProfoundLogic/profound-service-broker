@@ -15,7 +15,6 @@ export interface BrokerService {
     iamId: string,
   ): Promise<boolean>
   lastOperation(instanceId: string, iamId: string): Promise<string>
-  importCatalog(file: Express.Multer.File): Promise<string>
   getCatalog(): Promise<Catalog>
   updateState(
     instanceId: string,

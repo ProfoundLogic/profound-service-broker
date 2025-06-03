@@ -6,23 +6,6 @@ import BrokerUtil from '../utils/brokerUtil'
 export class BrokerController {
   constructor(private brokerService: BrokerService) {}
 
-  public importCatalog: RequestHandler = async (req, res, next) => {
-    try {
-      const file = req.file
-      if (!file) {
-        res
-          .status(400)
-          .json({ message: 'No file provided. Please upload a catalog file.' })
-        return
-      }
-      const response = await this.brokerService.importCatalog(file)
-      res.status(200).json(response)
-    } catch (error) {
-      logger.error(`Error importing catalog: ${error}`)
-      next(error)
-    }
-  }
-
   public getCatalog: RequestHandler = async (_req, res, next) => {
     try {
       const response = await this.brokerService.getCatalog()
