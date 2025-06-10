@@ -11,7 +11,8 @@
     "noImplicitAny": true,
     "skipLibCheck": true,
     "strict": true,
-    "typeRoots": ["./node_modules/@types", "./src/types"]
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "sourceMap": true
   },
   "include": ["./*.js", "src/**/*.ts", "test/**/*.ts", ".eslintrc.js"],
   "exclude": [

@@ -28,8 +28,9 @@ To run Broker application in development you will need:
 
 ```bash
 yarn install
-docker compose up
 ```
+
+3. Run the launch configuration
 
 ### Deployment
 
