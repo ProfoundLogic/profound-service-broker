@@ -1,0 +1,5 @@
+{
+  "verbose": true,
+  "ext": "ts,json",
+  "ignore": ["src/tests/*", "node_modules/*", ".vscode/*"]
+}

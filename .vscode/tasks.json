@@ -2,55 +2,23 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "type": "docker-build",
-      "label": "docker-build",
-      "platform": "node",
-      "dockerBuild": {
-        "dockerfile": "${workspaceFolder}/Dockerfile",
-        "context": "${workspaceFolder}",
-        "pull": true
-      }
-    },
-    {
-      "type": "docker-run",
-      "label": "docker-run: release",
-      "dependsOn": ["docker-build"],
-      "platform": "node"
-    },
-    {
-      "type": "docker-run",
-      "label": "docker-run: debug",
-      "dependsOn": ["docker-build"],
-      "dockerRun": {
-        "env": {
-          "DEBUG": "*",
-          "NODE_ENV": "development"
-        },
-        "command": "npm run start:dev"
-      },
-      "node": {
-        "enableDebugging": true
-      }
-    },
-    {
       "label": "docker-compose-up",
       "type": "shell",
-      "command": "docker compose up --build",
+      "command": "docker compose up --build --no-deps --force-recreate",
       "isBackground": true,
-      "problemMatcher": {
-        "pattern": [
-          {
-            "regexp": ".",
-            "file": 1,
-            "location": 2,
-            "message": 3
+      "problemMatcher": [
+        {
+          "base": "$tsc-watch",
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".*[nodemon] restarting due to changes...",
+            "endsPattern": ".*Server is running on http://localhost:\\d+"
           }
-        ],
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": ".*Server is running on http://localhost:\\d+",
-          "endsPattern": ".*Server is ending"
         }
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
       }
     }
   ]
