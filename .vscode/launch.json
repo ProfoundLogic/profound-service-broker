@@ -13,7 +13,8 @@
       "localRoot": "${workspaceFolder}",
       "remoteRoot": "/usr/src/app",
       "sourceMaps": true,
-      "preLaunchTask": "docker-compose-up"
+      "preLaunchTask": "docker-compose-up",
+      "postDebugTask": "kill-docker-compose"
     }
   ]
 }

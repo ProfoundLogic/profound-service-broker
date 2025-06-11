@@ -12,7 +12,7 @@
           "background": {
             "activeOnStart": true,
             "beginsPattern": ".*[nodemon] restarting due to changes...",
-            "endsPattern": ".*Server is running on http://localhost:\\d+"
+            "endsPattern": ".*Debugger listening on ws://0.0.0.0:9229/.*"
           }
         }
       ],
@@ -20,6 +20,20 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "label": "kill-docker-compose",
+      "type": "shell",
+      "command": "echo ${input:terminate}",
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "terminate",
+      "type": "command",
+      "command": "workbench.action.tasks.terminate",
+      "args": "docker-compose-up"
     }
   ]
 }
