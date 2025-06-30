@@ -42,46 +42,7 @@ export class BrokerServiceImpl implements BrokerService {
       const createServiceRequest = new CreateServiceInstanceRequest(details)
       createServiceRequest.instanceId = instanceId
 
-      if (
-        createServiceRequest.context &&
-        createServiceRequest.context.platform === BrokerUtil.IBM_CLOUD
-      ) {
-        const plan = CatalogUtil.getPlan(
-          await this.catalogService.getCatalog(),
-          createServiceRequest.service_id,
-          createServiceRequest.plan_id,
-        )
-
-        if (!plan) {
-          logger.error(
-            `Plan id:${createServiceRequest.plan_id} does not belong to this service: ${createServiceRequest.service_id}`,
-          )
-          throw new Error(`Invalid plan id: ${createServiceRequest.plan_id}`)
-        }
-
-        const serviceInstance = this.getServiceInstanceEntity(
-          createServiceRequest,
-          iamId,
-          region,
-        )
-
-        const serviceInstanceRepository =
-          AppDataSource.getRepository(ServiceInstance)
-        await serviceInstanceRepository.save(serviceInstance)
-
-        logger.info(
-          `Service Instance created: instanceId: ${instanceId} status: ${serviceInstance.status} planId: ${plan.id}`,
-        )
-
-        const displayName = await this.getServiceMetaDataByAttribute(
-          BrokerServiceImpl.DISPLAY_NAME,
-        )
-        const responseUrl = `${process.env.DASHBOARD_URL}${BrokerServiceImpl.PROVISION_STATUS_API}${displayName || (await this.catalogService.getCatalog()).getServiceDefinitions()[0].name}${BrokerServiceImpl.INSTANCE_ID}${instanceId}`
-
-        return plainToInstance(CreateServiceInstanceResponse, {
-          dashboardUrl: responseUrl,
-        })
-      } else {
+      if (this.requestNotSentFromIBM(createServiceRequest)) {
         logger.error(
           `Unidentified platform: ${createServiceRequest.context?.platform}`,
         )
@@ -89,6 +50,42 @@ export class BrokerServiceImpl implements BrokerService {
           `Invalid platform: ${createServiceRequest.context?.platform}`,
         )
       }
+
+      const plan = CatalogUtil.getPlan(
+        await this.catalogService.getCatalog(),
+        createServiceRequest.service_id,
+        createServiceRequest.plan_id,
+      )
+
+      if (!plan) {
+        logger.error(
+          `Plan id:${createServiceRequest.plan_id} does not belong to this service: ${createServiceRequest.service_id}`,
+        )
+        throw new Error(`Invalid plan id: ${createServiceRequest.plan_id}`)
+      }
+
+      const serviceInstance = this.getServiceInstanceEntity(
+        createServiceRequest,
+        iamId,
+        region,
+      )
+
+      const serviceInstanceRepository =
+        AppDataSource.getRepository(ServiceInstance)
+      await serviceInstanceRepository.save(serviceInstance)
+
+      logger.info(
+        `Service Instance created: instanceId: ${instanceId} status: ${serviceInstance.status} planId: ${plan.id}`,
+      )
+
+      const displayName = await this.getServiceMetaDataByAttribute(
+        BrokerServiceImpl.DISPLAY_NAME,
+      )
+      const responseUrl = `${process.env.DASHBOARD_URL}${BrokerServiceImpl.PROVISION_STATUS_API}${displayName || (await this.catalogService.getCatalog()).getServiceDefinitions()[0].name}${BrokerServiceImpl.INSTANCE_ID}${instanceId}`
+
+      return plainToInstance(CreateServiceInstanceResponse, {
+        dashboardUrl: responseUrl,
+      })
     } catch (error) {
       logger.error('Error provisioning service instance:', error)
       throw new Error('Error provisioning service instance')
@@ -106,6 +103,15 @@ export class BrokerServiceImpl implements BrokerService {
       logger.error('Error deprovisioning service instance:', error)
       throw new Error('Error deprovisioning service instance')
     }
+  }
+
+  private requestNotSentFromIBM(
+    createServiceRequest: CreateServiceInstanceRequest,
+  ): boolean {
+    return !(
+      createServiceRequest.context &&
+      createServiceRequest.context.platform === BrokerUtil.IBM_CLOUD
+    )
   }
 
   private async getServiceMetaDataByAttribute(
