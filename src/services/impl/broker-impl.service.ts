@@ -27,6 +27,7 @@ export class BrokerServiceImpl implements BrokerService {
   private static readonly DISPLAY_NAME = 'displayName'
   private static readonly PROVISION_STATUS_API = '/provision_status?type='
   private static readonly INSTANCE_ID = '&instance_id='
+  private static readonly AUTHORIZATION_CODE = '&authorization_code='
 
   constructor() {
     this.catalogService = new CatalogServiceImpl()
@@ -90,7 +91,7 @@ export class BrokerServiceImpl implements BrokerService {
       const displayName = await this.getServiceMetaDataByAttribute(
         BrokerServiceImpl.DISPLAY_NAME,
       )
-      const responseUrl = `${process.env.DASHBOARD_URL}${BrokerServiceImpl.PROVISION_STATUS_API}${displayName || (await this.catalogService.getCatalog()).getServiceDefinitions()[0].name}${BrokerServiceImpl.INSTANCE_ID}${instanceId}`
+      const responseUrl = `${process.env.DASHBOARD_URL}${BrokerServiceImpl.PROVISION_STATUS_API}${displayName || (await this.catalogService.getCatalog()).getServiceDefinitions()[0].name}${BrokerServiceImpl.INSTANCE_ID}${instanceId}${BrokerServiceImpl.AUTHORIZATION_CODE}${floatingLicense.authorizationCode}`
 
       return plainToInstance(CreateServiceInstanceResponse, {
         dashboardUrl: responseUrl,
