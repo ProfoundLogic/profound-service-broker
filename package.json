@@ -24,6 +24,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,json,css,md}\"",
     "prepare": "husky install",
     "typeorm": "ts-node ./node_modules/typeorm/cli.js",
+    "migrate:create": "yarn typeorm migration:create ./src/db/migrations/osb",
     "migrate:generate": "yarn typeorm migration:generate -d ./src/db/data-source.ts",
     "migrate": "yarn typeorm migration:run -d ./src/db/data-source.ts"
   },

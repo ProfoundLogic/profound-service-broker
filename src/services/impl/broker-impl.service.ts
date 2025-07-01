@@ -15,10 +15,14 @@ import { ServiceInstanceStatus } from '../../enums/service-instance-status'
 import { OperationState } from '../../enums/operation-state'
 import AppDataSource from '../../db/data-source'
 import { CatalogServiceImpl } from './catalog-impl.service'
+import { LicenseServiceImpl } from './license-impl.service'
+import { FloatingLicense } from '../../models/floating-license.model'
 
 export class BrokerServiceImpl implements BrokerService {
   dashboardUrl: string = process.env.DASHBOARD_URL || 'http://localhost:8080'
   private catalogService: CatalogServiceImpl
+  private licenseService: LicenseServiceImpl
+
   private static readonly INSTANCE_STATE = 'state'
   private static readonly DISPLAY_NAME = 'displayName'
   private static readonly PROVISION_STATUS_API = '/provision_status?type='
@@ -26,6 +30,7 @@ export class BrokerServiceImpl implements BrokerService {
 
   constructor() {
     this.catalogService = new CatalogServiceImpl()
+    this.licenseService = new LicenseServiceImpl()
   }
 
   public async getCatalog(): Promise<Catalog> {
@@ -64,8 +69,12 @@ export class BrokerServiceImpl implements BrokerService {
         throw new Error(`Invalid plan id: ${createServiceRequest.plan_id}`)
       }
 
+      const floatingLicense =
+        await this.licenseService.provisionFloatingLicense(instanceId)
+
       const serviceInstance = this.getServiceInstanceEntity(
         createServiceRequest,
+        floatingLicense,
         iamId,
         region,
       )
@@ -187,6 +196,7 @@ export class BrokerServiceImpl implements BrokerService {
 
   private getServiceInstanceEntity(
     request: CreateServiceInstanceRequest,
+    license: FloatingLicense,
     iamId: string,
     region: string,
   ): ServiceInstance {
@@ -194,6 +204,7 @@ export class BrokerServiceImpl implements BrokerService {
     instance.instanceId = request.instanceId ?? ''
     instance.name = request.context?.name ?? ''
     instance.serviceId = request.service_id
+    instance.authorizationCode = license.authorizationCode
     instance.planId = request.plan_id
     instance.iamId = iamId
     instance.region = region

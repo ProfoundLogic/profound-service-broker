@@ -18,6 +18,9 @@ export class ServiceInstance extends BaseEntity {
   @Column({ name: 'service_id', nullable: true })
   serviceId!: string
 
+  @Column({ name: 'authorization_code' })
+  authorizationCode!: string
+
   @Column({ nullable: true })
   status!: string
 
