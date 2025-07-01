@@ -14,7 +14,7 @@ export class LicenseServiceImpl implements LicenseService {
     '/authorization_codes/generate'
 
   async provisionFloatingLicense(instanceId: string): Promise<FloatingLicense> {
-    const customerName = this.createCustomerName(instanceId)
+    const customerName = this.getCustomerName(instanceId)
     const customerId = await this.createCustomer(customerName)
     const licenseId = await this.createLicense(customerId)
     const authorizationCode = await this.createAuthorizationCode(licenseId)
@@ -26,7 +26,13 @@ export class LicenseServiceImpl implements LicenseService {
     )
   }
 
-  private createCustomerName(instanceId: string): string {
+  async deprovisionFloatingLicense(instanceId: string): Promise<void> {
+    const customerName = this.getCustomerName(instanceId)
+    const customerId = await this.getCustomer(customerName)
+    await this.deleteLicense(customerId)
+  }
+
+  private getCustomerName(instanceId: string): string {
     return `ibm-cloud-${instanceId}`
   }
 
@@ -48,6 +54,24 @@ export class LicenseServiceImpl implements LicenseService {
     }
   }
 
+  private async getCustomer(customerName: string): Promise<number> {
+    const response = await axios.get(
+      `${this.pllsEndpoint}${LicenseServiceImpl.LICENSE_PATH}${customerName}`,
+      {
+        headers: {
+          Accept: 'application/json',
+          [LicenseServiceImpl.API_KEY_HEADER]: this.pllsApiKey,
+        },
+      },
+    )
+
+    if (response.data && typeof response.data === 'object') {
+      return response.data.customer_id
+    } else {
+      throw new Error('Failed to get PLLS Customer')
+    }
+  }
+
   private async createLicense(customerId: number): Promise<number> {
     const response = await axios.post(
       `${this.pllsEndpoint}${LicenseServiceImpl.LICENSE_PATH}${customerId}`,
@@ -64,6 +88,18 @@ export class LicenseServiceImpl implements LicenseService {
     } else {
       throw new Error('Failed to create new PLLS License')
     }
+  }
+
+  private async deleteLicense(customerId: number) {
+    await axios.delete(
+      `${this.pllsEndpoint}${LicenseServiceImpl.LICENSE_PATH}${customerId}`,
+      {
+        headers: {
+          Accept: 'application/json',
+          [LicenseServiceImpl.API_KEY_HEADER]: this.pllsApiKey,
+        },
+      },
+    )
   }
 
   private async createAuthorizationCode(licenseId: number): Promise<string> {

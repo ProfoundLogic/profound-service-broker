@@ -105,7 +105,7 @@ export class BrokerServiceImpl implements BrokerService {
     try {
       const serviceInstanceRepository =
         AppDataSource.getRepository(ServiceInstance)
-
+      await this.licenseService.deprovisionFloatingLicense(instanceId)
       await serviceInstanceRepository.delete({ instanceId })
       return true
     } catch (error) {
