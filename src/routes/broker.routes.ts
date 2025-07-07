@@ -1,12 +1,17 @@
 import { Router } from 'express'
 import { BrokerController } from '../controllers/broker.controller'
 import { BrokerServiceImpl } from '../services/impl/broker-impl.service'
+import { CatalogServiceImpl } from '../services/impl/catalog-impl.service'
+import { LicenseServiceImpl } from '../services/impl/license-impl.service'
 
 export class BrokerRoutes {
   static get routes(): Router {
     const router = Router()
 
-    const service = new BrokerServiceImpl()
+    const service = new BrokerServiceImpl(
+      new CatalogServiceImpl(),
+      new LicenseServiceImpl(),
+    )
     const controller = new BrokerController(service)
 
     /**

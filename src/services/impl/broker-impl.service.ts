@@ -14,14 +14,12 @@ import { CatalogUtil } from '../../utils/catalogUtil'
 import { ServiceInstanceStatus } from '../../enums/service-instance-status'
 import { OperationState } from '../../enums/operation-state'
 import AppDataSource from '../../db/data-source'
-import { CatalogServiceImpl } from './catalog-impl.service'
-import { LicenseServiceImpl } from './license-impl.service'
 import { FloatingLicense } from '../../models/floating-license.model'
+import { CatalogService } from '../catalog.service'
+import { LicenseService } from '../license.service'
 
 export class BrokerServiceImpl implements BrokerService {
   dashboardUrl: string = process.env.DASHBOARD_URL || 'http://localhost:8080'
-  private catalogService: CatalogServiceImpl
-  private licenseService: LicenseServiceImpl
 
   private static readonly INSTANCE_STATE = 'state'
   private static readonly DISPLAY_NAME = 'displayName'
@@ -29,10 +27,10 @@ export class BrokerServiceImpl implements BrokerService {
   private static readonly INSTANCE_ID = '&instance_id='
   private static readonly AUTHORIZATION_CODE = '&authorization_code='
 
-  constructor() {
-    this.catalogService = new CatalogServiceImpl()
-    this.licenseService = new LicenseServiceImpl()
-  }
+  constructor(
+    private catalogService: CatalogService,
+    private licenseService: LicenseService,
+  ) {}
 
   public async getCatalog(): Promise<Catalog> {
     return this.catalogService.getCatalog()
