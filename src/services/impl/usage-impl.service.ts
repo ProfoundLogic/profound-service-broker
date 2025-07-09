@@ -6,7 +6,7 @@ import logger from '../../utils/logger'
 export class UsageServiceImpl implements UsageService {
   private usageEndpoint: string = process.env.USAGE_ENDPOINT || ''
   private iamEndpoint: string = process.env.IAM_ENDPOINT || ''
-  private apiKey: string = process.env.METERING_API_KEY || ''
+  private apiKey: string = process.env.IAM_API_KEY || ''
 
   private static readonly IAM_IDENTITY_TOKEN_PATH = '/identity/token'
   private static readonly IAM_GRANT_TYPE =

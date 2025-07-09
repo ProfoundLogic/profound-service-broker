@@ -11,16 +11,22 @@ import { notFoundMiddleware } from './middlewares/not-found-middleware'
 import { Authenticator } from './middlewares/authorization'
 
 import { AppRoutes } from './routes/routes'
+import { BillingServiceImpl } from './services/impl/billing-impl.service'
+import { UsageServiceImpl } from './services/impl/usage-impl.service'
 
 const PORT = process.env.PORT || 3000
 
+const billingService = new BillingServiceImpl(new UsageServiceImpl())
+
 process.on('uncaughtException', error => {
   logger.error(`Uncaught Exception: ${error}`)
+  billingService.stopJob()
   process.exit(1)
 })
 
 process.on('unhandledRejection', (reason, promise) => {
   logger.error('Unhandled Rejection at:', promise, 'reason:', reason)
+  billingService.stopJob()
   process.exit(1)
 })
 
@@ -50,6 +56,8 @@ export const startServer = async () => {
         ',',
       ),
     })
+
+    billingService.startJob()
 
     app.use(authenticator.authorizeRequest)
 
