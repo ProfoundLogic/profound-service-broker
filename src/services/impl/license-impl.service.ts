@@ -5,13 +5,16 @@ import { LicenseService } from '../license.service'
 export class LicenseServiceImpl implements LicenseService {
   private pllsEndpoint = process.env.PLLS_URL || ''
   private pllsApiKey = process.env.PLLS_API_KEY || ''
+  private pllsModules = LicenseServiceImpl.parseModulesEnv(
+    process.env.PLLS_MODULES as string,
+  )
 
   private static readonly API_KEY_HEADER = 'x-plls-api-key'
-
   private static readonly CUSTOMER_PATH = '/customers/ibm_cloud/'
   private static readonly LICENSE_PATH = '/licenses/ibm_cloud/'
   private static readonly AUTHORIZATION_CODE_PATH =
     '/authorization_codes/generate'
+  private static readonly LICENSE_SEATS = 100
 
   async provisionFloatingLicense(instanceId: string): Promise<FloatingLicense> {
     const customerName = this.getCustomerName(instanceId)
@@ -30,6 +33,12 @@ export class LicenseServiceImpl implements LicenseService {
     const customerName = this.getCustomerName(instanceId)
     const customerId = await this.getCustomer(customerName)
     await this.deleteLicense(customerId)
+  }
+
+  private static parseModulesEnv(modules_string: string): number[] {
+    return modules_string.split(',').map(module_string => {
+      return parseInt(module_string, 10)
+    })
   }
 
   private getCustomerName(instanceId: string): string {
@@ -75,6 +84,7 @@ export class LicenseServiceImpl implements LicenseService {
   private async createLicense(customerId: number): Promise<number> {
     const response = await axios.post(
       `${this.pllsEndpoint}${LicenseServiceImpl.LICENSE_PATH}${customerId}`,
+      this.buildLicensePayload(LicenseServiceImpl.LICENSE_SEATS),
       {
         headers: {
           Accept: 'application/json',
@@ -87,6 +97,26 @@ export class LicenseServiceImpl implements LicenseService {
       return response.data.license_id
     } else {
       throw new Error('Failed to create new PLLS License')
+    }
+  }
+
+  private buildLicensePayload(licenseSeats: number) {
+    return {
+      license_type: 2,
+      floating: {
+        seats_entitled: licenseSeats,
+        pulse_ttl: 86400,
+      },
+      product_id: 1,
+      description: 'IBM Cloud License Key',
+      modules: this.pllsModules.map(pllsModule => {
+        return {
+          module_id: pllsModule,
+          term_id: 1,
+          limit_id: 1,
+          usage_limit: licenseSeats,
+        }
+      }),
     }
   }
 
