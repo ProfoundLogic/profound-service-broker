@@ -25,7 +25,7 @@ export class BillingServiceImpl implements BillingService {
         resourceInstanceId: serviceInstance.instanceId,
         start: 0,
         end: 0,
-        region: '',
+        region: serviceInstance.region,
         measuredUsage: [],
       })
     }
