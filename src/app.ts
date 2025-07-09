@@ -13,10 +13,13 @@ import { Authenticator } from './middlewares/authorization'
 import { AppRoutes } from './routes/routes'
 import { BillingServiceImpl } from './services/impl/billing-impl.service'
 import { UsageServiceImpl } from './services/impl/usage-impl.service'
+import { IAMServiceImpl } from './services/impl/iam-impl.service'
 
 const PORT = process.env.PORT || 3000
 
-const billingService = new BillingServiceImpl(new UsageServiceImpl())
+const billingService = new BillingServiceImpl(
+  new UsageServiceImpl(new IAMServiceImpl()),
+)
 
 process.on('uncaughtException', error => {
   logger.error(`Uncaught Exception: ${error}`)

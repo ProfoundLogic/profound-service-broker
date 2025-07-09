@@ -3,13 +3,14 @@ import { BrokerController } from '../controllers/broker.controller'
 import { BrokerServiceImpl } from '../services/impl/broker-impl.service'
 import { CatalogServiceImpl } from '../services/impl/catalog-impl.service'
 import { LicenseServiceImpl } from '../services/impl/license-impl.service'
+import { IAMServiceImpl } from '../services/impl/iam-impl.service'
 
 export class BrokerRoutes {
   static get routes(): Router {
     const router = Router()
 
     const service = new BrokerServiceImpl(
-      new CatalogServiceImpl(),
+      new CatalogServiceImpl(new IAMServiceImpl()),
       new LicenseServiceImpl(),
     )
     const controller = new BrokerController(service)

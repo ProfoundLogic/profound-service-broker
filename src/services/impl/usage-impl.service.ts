@@ -2,17 +2,15 @@ import axios, { AxiosError, AxiosResponse } from 'axios'
 import { MeteringPayload } from '../../models/metering-payload.model'
 import { UsageService } from '../usage.service'
 import logger from '../../utils/logger'
+import { IAMService } from '../iam.service'
 
 export class UsageServiceImpl implements UsageService {
   private usageEndpoint: string = process.env.USAGE_ENDPOINT || ''
-  private iamEndpoint: string = process.env.IAM_ENDPOINT || ''
-  private apiKey: string = process.env.IAM_API_KEY || ''
 
-  private static readonly IAM_IDENTITY_TOKEN_PATH = '/identity/token'
-  private static readonly IAM_GRANT_TYPE =
-    'urn:ibm:params:oauth:grant-type:apikey'
   private static readonly USAGE_API_PATH =
     '/v4/metering/resources/{resource_id}/usage'
+
+  constructor(private IAMService: IAMService) {}
 
   public async sendUsageData(
     resourceId: string,
@@ -28,7 +26,7 @@ export class UsageServiceImpl implements UsageService {
         meteringPayload.end = instant
       }
 
-      const iamAccessToken = await this.getIamAccessToken()
+      const iamAccessToken = await this.IAMService.getAccessToken()
       const usageApiUrl = this.usageEndpoint.concat(
         UsageServiceImpl.USAGE_API_PATH.replace('{resource_id}', resourceId),
       )
@@ -86,29 +84,6 @@ export class UsageServiceImpl implements UsageService {
         logger.error('Failed with response:', axiosError.response.data)
       }
       throw error
-    }
-  }
-
-  private async getIamAccessToken(): Promise<string> {
-    const data = UsageServiceImpl.IAM_GRANT_TYPE.concat(this.apiKey)
-    const response = await axios.post(
-      `${this.iamEndpoint}${UsageServiceImpl.IAM_IDENTITY_TOKEN_PATH}`,
-      data,
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        params: {
-          grant_type: UsageServiceImpl.IAM_GRANT_TYPE,
-          apikey: this.apiKey,
-        },
-      },
-    )
-
-    if (response.data && response.data.access_token) {
-      return response.data.access_token
-    } else {
-      throw new Error('Failed to retrieve IAM access token')
     }
   }
 }

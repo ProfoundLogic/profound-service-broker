@@ -9,28 +9,24 @@ import {
 import { plainToInstance } from 'class-transformer'
 import { ServiceDefinition } from '../../models/service-definition.model'
 import { Plan } from '../../models/plan.model'
+import { IAMService } from '../iam.service'
 
 export class CatalogServiceImpl implements CatalogService {
-  private iamEndpoint: string = process.env.IAM_ENDPOINT || ''
   private globalCatalogEndpoint: string = process.env.GLOBAL_CATALOG_URL || ''
   private serviceId: string = process.env.GLOBAL_CATALOG_SERVICE_ID || ''
   private accountId: string = process.env.GLOBAL_CATALOG_ACCOUNT_ID || 'global'
-  private apiKey: string = process.env.IAM_API_KEY || ''
 
   private catalog: Catalog = new Catalog([])
   private lastUpdate: string | undefined
 
-  private static readonly IAM_IDENTITY_TOKEN_PATH = '/identity/token'
-  private static readonly IAM_GRANT_TYPE =
-    'urn:ibm:params:oauth:grant-type:apikey'
   private static readonly GC_ENTRY_PATH = '/api/v1/'
 
-  constructor() {
+  constructor(private IAMService: IAMService) {
     this.getCatalog()
   }
 
   public async getCatalog(): Promise<Catalog> {
-    const iamAccessToken = await this.getIamAccessToken()
+    const iamAccessToken = await this.IAMService.getAccessToken()
     const globalCatalogEntry = await this.getGlobalCatalogEntry(iamAccessToken)
     if (this.lastUpdate === globalCatalogEntry.updated) {
       return this.catalog
@@ -41,28 +37,6 @@ export class CatalogServiceImpl implements CatalogService {
     )
     this.lastUpdate = globalCatalogEntry.updated
     return this.catalog
-  }
-
-  private async getIamAccessToken(): Promise<string> {
-    const response = await axios.post(
-      `${this.iamEndpoint}${CatalogServiceImpl.IAM_IDENTITY_TOKEN_PATH}`,
-      {
-        grant_type: CatalogServiceImpl.IAM_GRANT_TYPE,
-        apikey: this.apiKey,
-      },
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json',
-        },
-      },
-    )
-
-    if (response.data && response.data.access_token) {
-      return response.data.access_token
-    } else {
-      throw new Error('Failed to retrieve IAM access token')
-    }
   }
 
   private async getGlobalCatalogEntry(
