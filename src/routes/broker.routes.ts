@@ -47,29 +47,6 @@ export class BrokerRoutes {
     router.put('/v2/service_instances/:instanceId', controller.provision)
 
     /**
-     * IBM Cloud Enablement Extension: enable service instance
-     * @throws IOException
-     */
-    router.put(
-      '/bluemix_v1/service_instances/:instanceId',
-      controller.updateState,
-    )
-
-    /**
-     * IBM Cloud Enablement Extension: service instance state inquiry.
-     * @throws IOException
-     */
-    router.get('/bluemix_v1/service_instances/:instanceId', controller.getState)
-    router.put(
-      '/v2/service_instances/:instanceId/service_bindings/:bindingId',
-      controller.bind,
-    )
-    router.delete(
-      '/v2/service_instances/:instanceId/service_bindings/:bindingId',
-      controller.unbind,
-    )
-
-    /**
      * Deprovision/Delete given service instance.
      * @param {string} instanceId - The instance id
      * @param {string} plan_id - The plan id
