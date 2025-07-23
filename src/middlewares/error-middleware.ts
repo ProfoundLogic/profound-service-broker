@@ -1,6 +1,7 @@
 import { ErrorRequestHandler } from 'express'
 import BaseError from '../errors/base-error'
 import logger from '../utils/logger'
+import AsyncRequiredError from '../errors/async-required-error'
 
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   if (res.headersSent) {
@@ -17,7 +18,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
       },
     )
 
-    res.status(err.statusCode).json({
+    let errorBody: any = {
       error: {
         status: err.statusCode,
         message: err.message,
@@ -25,7 +26,17 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
         ...(err.code && { code: err.code }),
         ...(err.params && { params: err.params }),
       },
-    })
+    }
+    if (err instanceof AsyncRequiredError) {
+      // Special case with async responses. See here:
+      // https://github.com/cloudfoundry/servicebroker/blob/v2.12/spec.md#asynchronous-operations
+      errorBody = {
+        error: err.name,
+        description: err.message,
+      }
+    }
+
+    res.status(err.statusCode).json(errorBody)
   } else {
     logger.error(`Unhandled Error - Message: ${err.message}`, {
       ip: req.ip,

@@ -17,9 +17,12 @@ import AppDataSource from '../../db/data-source'
 import { FloatingLicense } from '../../models/floating-license.model'
 import { CatalogService } from '../catalog.service'
 import { LicenseService } from '../license.service'
+import { BillingService } from '../billing.service'
 
 export class BrokerServiceImpl implements BrokerService {
   dashboardUrl: string = process.env.DASHBOARD_URL || 'http://localhost:8080'
+
+  lastOperationStatus: { [instanceId: string]: OperationState } = {}
 
   private static readonly INSTANCE_STATE = 'state'
   private static readonly DISPLAY_NAME = 'displayName'
@@ -30,6 +33,7 @@ export class BrokerServiceImpl implements BrokerService {
   constructor(
     private catalogService: CatalogService,
     private licenseService: LicenseService,
+    private billingService: BillingService,
   ) {}
 
   public async getCatalog(): Promise<Catalog> {
@@ -89,11 +93,15 @@ export class BrokerServiceImpl implements BrokerService {
       const displayName = await this.getServiceMetaDataByAttribute(
         BrokerServiceImpl.DISPLAY_NAME,
       )
-      const responseUrl = `${process.env.DASHBOARD_URL}${BrokerServiceImpl.PROVISION_STATUS_API}${displayName || (await this.catalogService.getCatalog()).getServiceDefinitions()[0].name}${BrokerServiceImpl.INSTANCE_ID}${instanceId}${BrokerServiceImpl.AUTHORIZATION_CODE}${floatingLicense.authorizationCode}`
+      const defaultName = (
+        await this.catalogService.getCatalog()
+      ).getServiceDefinitions()[0].name
+      const responseUrl = `${process.env.DASHBOARD_URL}${BrokerServiceImpl.PROVISION_STATUS_API}${displayName || defaultName}${BrokerServiceImpl.INSTANCE_ID}${instanceId}${BrokerServiceImpl.AUTHORIZATION_CODE}${floatingLicense.authorizationCode}`
 
-      return plainToInstance(CreateServiceInstanceResponse, {
-        dashboardUrl: responseUrl,
+      const response = plainToInstance(CreateServiceInstanceResponse, {
+        dashboard_url: responseUrl,
       })
+      return response
     } catch (error) {
       logger.error('Error provisioning service instance:', error)
       throw new Error('Error provisioning service instance')
@@ -104,11 +112,20 @@ export class BrokerServiceImpl implements BrokerService {
     try {
       const serviceInstanceRepository =
         AppDataSource.getRepository(ServiceInstance)
+      const serviceInstance = await serviceInstanceRepository.findOneBy({
+        instanceId,
+      })
+      if (serviceInstance === null) {
+        throw new Error(`Cannot find service instance: ${instanceId}`)
+      }
+      await this.billingService.sendBillingForInstance(serviceInstance)
       await this.licenseService.deprovisionFloatingLicense(instanceId)
       await serviceInstanceRepository.delete({ instanceId })
+      this.updateLastOperation(instanceId, OperationState.SUCCEEDED)
       return true
     } catch (error) {
       logger.error('Error deprovisioning service instance:', error)
+      this.updateLastOperation(instanceId, OperationState.FAILED)
       throw new Error('Error deprovisioning service instance')
     }
   }
@@ -146,13 +163,18 @@ export class BrokerServiceImpl implements BrokerService {
       )
 
       const response = {
-        [BrokerServiceImpl.INSTANCE_STATE]: OperationState.SUCCEEDED,
+        [BrokerServiceImpl.INSTANCE_STATE]:
+          this.lastOperationStatus[instanceId] ?? OperationState.SUCCEEDED,
       }
       return response
     } catch (error) {
       logger.error('Error fetching last operation:', error)
       throw new Error('Error fetching last operation')
     }
+  }
+
+  public updateLastOperation(instanceId: string, state: OperationState): void {
+    this.lastOperationStatus[instanceId] = state
   }
 
   public async updateState(

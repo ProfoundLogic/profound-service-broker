@@ -1,3 +1,4 @@
+import { OperationState } from '../enums/operation-state'
 import { Catalog } from '../models/catalog.model'
 import { CreateServiceInstanceResponse } from '../models/response/create-service-instance-response.model'
 
@@ -15,6 +16,7 @@ export interface BrokerService {
     iamId: string,
   ): Promise<boolean>
   lastOperation(instanceId: string, iamId: string): Promise<string>
+  updateLastOperation(instanceId: string, state: OperationState): void
   getCatalog(): Promise<Catalog>
   updateState(
     instanceId: string,

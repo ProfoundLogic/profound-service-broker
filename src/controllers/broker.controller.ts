@@ -2,6 +2,8 @@ import { RequestHandler } from 'express'
 import { BrokerService } from '../services/broker.service'
 import logger from '../utils/logger'
 import BrokerUtil from '../utils/brokerUtil'
+import { OperationState } from '../enums/operation-state'
+import AsyncRequiredError from '../errors/async-required-error'
 
 export class BrokerController {
   constructor(private brokerService: BrokerService) {}
@@ -18,14 +20,14 @@ export class BrokerController {
   }
 
   public provision: RequestHandler = async (req, res, next) => {
+    const instanceId = req.params.instanceId ?? ''
+    const acceptsIncomplete = req.query.accepts_incomplete === 'true'
+
+    logger.info(
+      `Create Service Instance request received: PUT /v2/service_instances/${instanceId}?accepts_incomplete=${acceptsIncomplete} request body: ${JSON.stringify(req.body)}`,
+    )
+
     try {
-      const instanceId = req.params.instanceId ?? ''
-      const acceptsIncomplete = req.query.accepts_incomplete === 'true'
-
-      logger.info(
-        `Create Service Instance request received: PUT /v2/service_instances/${instanceId}?accepts_incomplete=${acceptsIncomplete} request body: ${JSON.stringify(req.body)}`,
-      )
-
       const iamId = BrokerUtil.getIamId(req) ?? ''
       const bluemixRegion =
         BrokerUtil.getHeaderValue(req, BrokerUtil.BLUEMIX_REGION_HEADER) ?? ''
@@ -158,19 +160,22 @@ export class BrokerController {
       logger.info(
         `Deprovision Service Instance request received: DELETE /v2/service_instances/${instanceId}?accepts_incomplete=${acceptsIncomplete}&plan_id=${planId}&service_id=${serviceId}`,
       )
+      if (!acceptsIncomplete) {
+        throw new AsyncRequiredError()
+      }
+      this.brokerService.updateLastOperation(
+        instanceId,
+        OperationState.IN_PROGRESS,
+      )
+      logger.info(`Deprovision Service Instance Response status: 202, body: {}`)
+      res.status(202).json({})
 
-      const response = await this.brokerService.deprovision(
+      await this.brokerService.deprovision(
         instanceId,
         planId,
         serviceId,
         BrokerUtil.getIamId(req) ?? '',
       )
-
-      logger.info(
-        `Deprovision Service Instance Response status: 200, body: ${JSON.stringify(response)}`,
-      )
-
-      res.status(200).json(response)
     } catch (error) {
       logger.error(`Error deprovisioning service instance: ${error}`)
       next(error)
