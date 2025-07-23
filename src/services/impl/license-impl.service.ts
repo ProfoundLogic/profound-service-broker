@@ -14,7 +14,7 @@ export class LicenseServiceImpl implements LicenseService {
   private static readonly LICENSE_PATH = '/licenses/ibm_cloud/'
   private static readonly AUTHORIZATION_CODE_PATH =
     '/authorization_codes/generate'
-  private static readonly LICENSE_SEATS = 100
+  private static readonly LICENSE_SEATS = 50
 
   async provisionFloatingLicense(instanceId: string): Promise<FloatingLicense> {
     const customerName = this.getCustomerName(instanceId)
