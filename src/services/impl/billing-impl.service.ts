@@ -9,7 +9,7 @@ export class BillingServiceImpl implements BillingService {
 
   constructor(private usageService: UsageService) {
     this.job = CronJob.from({
-      cronTime: '0 0 2 * *',
+      cronTime: '0 0 1 * *',
       onTick: this.sendBillingData,
       start: false,
     })
@@ -20,15 +20,24 @@ export class BillingServiceImpl implements BillingService {
       AppDataSource.getRepository(ServiceInstance)
     const serviceInstances = await serviceInstanceRepository.find()
     for (const serviceInstance of serviceInstances) {
-      await this.usageService.sendUsageData(serviceInstance.instanceId, {
-        planId: serviceInstance.planId,
-        resourceInstanceId: serviceInstance.instanceId,
-        start: 0,
-        end: 0,
-        region: serviceInstance.region,
-        measuredUsage: [],
-      })
+      await this.sendBillingForInstance(serviceInstance)
     }
+  }
+
+  async sendBillingForInstance(serviceInstance: ServiceInstance) {
+    await this.usageService.sendUsageData(serviceInstance.instanceId, {
+      planId: serviceInstance.planId,
+      resourceInstanceId: serviceInstance.instanceId,
+      start: 0,
+      end: 0,
+      region: serviceInstance.region,
+      measuredUsage: [
+        {
+          measure: 'INSTANCE',
+          quantity: 1,
+        },
+      ],
+    })
   }
 
   startJob(): void {

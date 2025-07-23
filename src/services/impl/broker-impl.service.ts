@@ -121,7 +121,7 @@ export class BrokerServiceImpl implements BrokerService {
       await this.billingService.sendBillingForInstance(serviceInstance)
       await this.licenseService.deprovisionFloatingLicense(instanceId)
       await serviceInstanceRepository.delete({ instanceId })
-      this.updateLastOperation(instanceId, OperationState.SUCCEEDED)
+      delete this.lastOperationStatus[instanceId]
       return true
     } catch (error) {
       logger.error('Error deprovisioning service instance:', error)
