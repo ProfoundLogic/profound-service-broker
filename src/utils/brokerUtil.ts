@@ -13,7 +13,6 @@ class BrokerUtil {
   static BLUEMIX_REGION_HEADER = 'x-bluemix-region'
   static DESCRIPTION = 'description'
   static ERROR = 'error'
-  static DASHBOARD_URL = 'dashboard_url'
   static IBM_IUID_PREFIX = 'IBMid-'
 
   static getIamId(req: Request): string | null {

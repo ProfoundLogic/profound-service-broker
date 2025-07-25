@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="UTF-8">
+  <title>Page Title</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+
+  <body class="p-3">
+
+    <h2>Authorization Code:</h2>
+    <div
+      class="mb-1">
+      <code 
+        id="authCode"
+        class="bg-light text-black p-1 py-2 rounded">
+        {{authorizationCode}}
+      </code>
+      <button
+        id="copyBtn"
+        class="btn btn-primary mt-2 d-block"
+        data-bs-toggle="tooltip"
+        data-bs-placement="bottom"
+        data-bs-title="Copied!"
+        onclick="copyToClipboard()">
+        Copy to Clipboard
+      </button>
+    </div>
+    
+    <br>
+    See notes here on:
+    <a href="https://profoundlogicsupport.atlassian.net/wiki/spaces/PUI/pages/164535971/Applying+Authorization+Codes">
+      applying an authorization code
+    </a>
+
+    <hr/>
+
+    <h2>Install</h2>
+    <a href="https://profoundlogicsupport.atlassian.net/wiki/spaces/PUI/pages/164495764/Installation">
+      Install Documentation
+    </a>
+
+    <hr/>
+
+    <h2>Uninstall</h2>
+    <a href="https://profoundlogicsupport.atlassian.net/wiki/spaces/PUI/pages/164496888/Uninstalling+Profound.js">
+      Uninstall Documentation
+    </a>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
+
+    <script>
+      // Enabling all the tooltips on the page.
+      const tooltipElements = $('[data-bs-toggle="tooltip"]');
+      const tooltips = [...tooltipElements].map(element => {
+        return new bootstrap.Tooltip(element, {
+          trigger: 'click'
+        });
+      })
+
+      function copyToClipboard() {
+        const authCode = $("#authCode").text();
+        navigator.clipboard.writeText(authCode);
+        setTimeout(() => {
+          bootstrap.Tooltip.getInstance("#copyBtn").hide();
+        }, 2000);
+      }
+    </script>
+
+  </body>
+</html>
+

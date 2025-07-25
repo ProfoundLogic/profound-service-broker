@@ -20,15 +20,12 @@ import { LicenseService } from '../license.service'
 import { BillingService } from '../billing.service'
 
 export class BrokerServiceImpl implements BrokerService {
-  dashboardUrl: string = process.env.DASHBOARD_URL || 'http://localhost:8080'
+  dashboardUrl: string = process.env.BROKER_URL || 'http://localhost:8080'
 
   lastOperationStatus: { [instanceId: string]: OperationState } = {}
 
+  private static readonly DASHBOARD_ROUTE = '/dashboard'
   private static readonly INSTANCE_STATE = 'state'
-  private static readonly DISPLAY_NAME = 'displayName'
-  private static readonly PROVISION_STATUS_API = '/provision_status?type='
-  private static readonly INSTANCE_ID = '&instance_id='
-  private static readonly AUTHORIZATION_CODE = '&authorization_code='
 
   constructor(
     private catalogService: CatalogService,
@@ -90,13 +87,7 @@ export class BrokerServiceImpl implements BrokerService {
         `Service Instance created: instanceId: ${instanceId} status: ${serviceInstance.status} planId: ${plan.id}`,
       )
 
-      const displayName = await this.getServiceMetaDataByAttribute(
-        BrokerServiceImpl.DISPLAY_NAME,
-      )
-      const defaultName = (
-        await this.catalogService.getCatalog()
-      ).getServiceDefinitions()[0].name
-      const responseUrl = `${process.env.DASHBOARD_URL}${BrokerServiceImpl.PROVISION_STATUS_API}${displayName || defaultName}${BrokerServiceImpl.INSTANCE_ID}${instanceId}${BrokerServiceImpl.AUTHORIZATION_CODE}${floatingLicense.authorizationCode}`
+      const responseUrl = `${this.dashboardUrl}${BrokerServiceImpl.DASHBOARD_ROUTE}?instance_id=${instanceId}&authorization_code=${serviceInstance.authorizationCode}`
 
       const response = plainToInstance(CreateServiceInstanceResponse, {
         dashboard_url: responseUrl,

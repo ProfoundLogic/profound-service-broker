@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { BrokerRoutes } from './broker.routes'
 import { UsageRoutes } from './usage.routes'
 import { SupportInfoRoutes } from './support-info.routes'
+import { DashboardRoutes } from './dashboard.routes'
 
 export class AppRoutes {
   static get routes(): Router {
@@ -10,6 +11,7 @@ export class AppRoutes {
     router.use('/', BrokerRoutes.routes)
     router.use('/', SupportInfoRoutes.routes)
     router.use('/', UsageRoutes.routes)
+    router.use('/', DashboardRoutes.routes)
 
     return router
   }
