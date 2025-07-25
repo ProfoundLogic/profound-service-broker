@@ -11,10 +11,12 @@ export class BrokerRoutes {
   static get routes(): Router {
     const router = Router()
 
+    const IAMService = new IAMServiceImpl()
+
     const service = new BrokerServiceImpl(
-      new CatalogServiceImpl(new IAMServiceImpl()),
+      new CatalogServiceImpl(IAMService),
       new LicenseServiceImpl(),
-      new BillingServiceImpl(new UsageServiceImpl(new IAMServiceImpl())),
+      new BillingServiceImpl(new UsageServiceImpl(IAMService)),
     )
     const controller = new BrokerController(service)
 
