@@ -10,8 +10,8 @@ export class LicenseServiceImpl implements LicenseService {
   )
 
   private static readonly API_KEY_HEADER = 'x-plls-api-key'
-  private static readonly CUSTOMER_PATH = '/customers/ibm_cloud/'
-  private static readonly LICENSE_PATH = '/licenses/ibm_cloud/'
+  private static readonly CUSTOMER_PATH = '/customers/'
+  private static readonly LICENSE_PATH = '/licenses/'
   private static readonly AUTHORIZATION_CODE_PATH =
     '/authorization_codes/generate'
   private static readonly LICENSE_SEATS = 50
