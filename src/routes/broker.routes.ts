@@ -5,7 +5,6 @@ import { CatalogServiceImpl } from '../services/impl/catalog-impl.service'
 import { LicenseServiceImpl } from '../services/impl/license-impl.service'
 import { IAMServiceImpl } from '../services/impl/iam-impl.service'
 import { BillingServiceImpl } from '../services/impl/billing-impl.service'
-import { UsageServiceImpl } from '../services/impl/usage-impl.service'
 
 export class BrokerRoutes {
   static get routes(): Router {
@@ -16,7 +15,7 @@ export class BrokerRoutes {
     const service = new BrokerServiceImpl(
       new CatalogServiceImpl(IAMService),
       new LicenseServiceImpl(),
-      new BillingServiceImpl(new UsageServiceImpl(IAMService)),
+      new BillingServiceImpl(IAMService),
     )
     const controller = new BrokerController(service)
 
