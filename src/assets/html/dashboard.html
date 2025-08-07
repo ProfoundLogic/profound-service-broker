@@ -7,24 +7,9 @@
 
   <body class="p-3">
 
-    <h2>Authorization Code:</h2>
-    <div
-      class="mb-1">
-      <code 
-        id="authCode"
-        class="bg-light text-black p-1 py-2 rounded">
-        {{authorizationCode}}
-      </code>
-      <button
-        id="copyBtn"
-        class="btn btn-primary mt-2 d-block"
-        data-bs-toggle="tooltip"
-        data-bs-placement="bottom"
-        data-bs-title="Copied!"
-        onclick="copyToClipboard()">
-        Copy to Clipboard
-      </button>
-    </div>
+    {{pjsAuthorizationCode}}
+
+    {{puiAuthorizationCode}}
     
     <br>
     See notes here on:
@@ -58,11 +43,19 @@
         });
       })
 
-      function copyToClipboard() {
-        const authCode = $("#authCode").text();
+      function copyToClipboardPJS() {
+        const authCode = $("#authCodePJS").text();
         navigator.clipboard.writeText(authCode);
         setTimeout(() => {
-          bootstrap.Tooltip.getInstance("#copyBtn").hide();
+          bootstrap.Tooltip.getInstance("#copyBtnPJS").hide();
+        }, 2000);
+      }
+
+      function copyToClipboardPUI() {
+        const authCode = $("#authCodePUI").text();
+        navigator.clipboard.writeText(authCode);
+        setTimeout(() => {
+          bootstrap.Tooltip.getInstance("#copyBtnPUI").hide();
         }, 2000);
       }
     </script>

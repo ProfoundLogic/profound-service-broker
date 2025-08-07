@@ -87,7 +87,7 @@ export class BrokerServiceImpl implements BrokerService {
         `Service Instance created: instanceId: ${instanceId} status: ${serviceInstance.status} planId: ${plan.id}`,
       )
 
-      const responseUrl = `${this.dashboardUrl}${BrokerServiceImpl.DASHBOARD_ROUTE}?instance_id=${instanceId}&pjs_authorization_code=${serviceInstance.pjsAuthorizationCode}&pui_authorization_code=${serviceInstance.puiAuthorizationCode}`
+      const responseUrl = `${this.dashboardUrl}${BrokerServiceImpl.DASHBOARD_ROUTE}?instance_id=${instanceId}`
 
       const response = plainToInstance(CreateServiceInstanceResponse, {
         dashboard_url: responseUrl,

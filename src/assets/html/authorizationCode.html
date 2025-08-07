@@ -1,0 +1,18 @@
+    <h2>{{product}} Authorization Code:</h2>
+    <div
+      class="mb-1">
+      <code 
+        id="authCode{{product}}"
+        class="bg-light text-black p-1 py-2 rounded">
+        {{authorizationCode}}
+      </code>
+      <button
+        id="copyBtn{{product}}"
+        class="btn btn-primary mt-2 d-block"
+        data-bs-toggle="tooltip"
+        data-bs-placement="bottom"
+        data-bs-title="Copied!"
+        onclick="copyToClipboard{{product}}()">
+        Copy to Clipboard
+      </button>
+    </div>
