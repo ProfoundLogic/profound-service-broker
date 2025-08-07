@@ -18,8 +18,17 @@ export class ServiceInstance extends BaseEntity {
   @Column({ name: 'service_id', nullable: true })
   serviceId!: string
 
-  @Column({ name: 'authorization_code' })
-  authorizationCode!: string
+  @Column({ name: 'pjs_license_id', nullable: true })
+  pjsLicenseId?: number
+
+  @Column({ name: 'pui_license_id', nullable: true })
+  puiLicenseId?: number
+
+  @Column({ name: 'pjs_authorization_code', nullable: true })
+  pjsAuthorizationCode?: string
+
+  @Column({ name: 'pui_authorization_code', nullable: true })
+  puiAuthorizationCode?: string
 
   @Column({ nullable: true })
   status!: string

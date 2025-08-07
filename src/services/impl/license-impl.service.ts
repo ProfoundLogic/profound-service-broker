@@ -1,12 +1,16 @@
 import axios from 'axios'
-import { FloatingLicense } from '../../models/floating-license.model'
+import { FloatingLicenses } from '../../models/floating-licenses.model'
 import { LicenseService } from '../license.service'
+import { ServiceInstance } from '../../db/entities/service-instance.entity'
 
 export class LicenseServiceImpl implements LicenseService {
   private pllsEndpoint = process.env.PLLS_URL || ''
   private pllsApiKey = process.env.PLLS_API_KEY || ''
-  private pllsModules = LicenseServiceImpl.parseModulesEnv(
-    process.env.PLLS_MODULES as string,
+  private pllsPUIModules = LicenseServiceImpl.parseModulesEnv(
+    process.env.PLLS_PUI_MODULES || '',
+  )
+  private pllsPJSModules = LicenseServiceImpl.parseModulesEnv(
+    process.env.PLLS_PJS_MODULES || '',
   )
 
   private static readonly API_KEY_HEADER = 'x-plls-api-key'
@@ -15,24 +19,49 @@ export class LicenseServiceImpl implements LicenseService {
   private static readonly AUTHORIZATION_CODE_PATH =
     '/authorization_codes/generate'
   private static readonly LICENSE_SEATS = 50
+  private static readonly PJS_PRODUCT_ID = 1
+  private static readonly PUI_PRODUCT_ID = 2
 
-  async provisionFloatingLicense(instanceId: string): Promise<FloatingLicense> {
+  async provisionFloatingLicense(
+    instanceId: string,
+  ): Promise<FloatingLicenses> {
     const customerName = this.getCustomerName(instanceId)
     const customerId = await this.createCustomer(customerName)
-    const licenseId = await this.createLicense(customerId)
-    const authorizationCode = await this.createAuthorizationCode(licenseId)
-    return new FloatingLicense(
+    let pjsLicenseId = undefined
+    let pjsAuthorizationCode = undefined
+    if (this.pllsPJSModules.length > 0) {
+      pjsLicenseId = await this.createLicense(
+        customerId,
+        LicenseServiceImpl.PJS_PRODUCT_ID,
+      )
+      pjsAuthorizationCode = await this.createAuthorizationCode(pjsLicenseId)
+    }
+    let puiLicenseId = undefined
+    let puiAuthorizationCode = undefined
+    if (this.pllsPUIModules.length > 0) {
+      puiLicenseId = await this.createLicense(
+        customerId,
+        LicenseServiceImpl.PUI_PRODUCT_ID,
+      )
+      puiAuthorizationCode = await this.createAuthorizationCode(puiLicenseId)
+    }
+    return new FloatingLicenses(
       customerName,
       customerId,
-      licenseId,
-      authorizationCode,
+      pjsLicenseId,
+      puiLicenseId,
+      pjsAuthorizationCode,
+      puiAuthorizationCode,
     )
   }
 
-  async deprovisionFloatingLicense(instanceId: string): Promise<void> {
-    const customerName = this.getCustomerName(instanceId)
-    const customerId = await this.getCustomer(customerName)
-    await this.deleteLicense(customerId)
+  async deprovisionFloatingLicenses(instance: ServiceInstance): Promise<void> {
+    if (instance.pjsLicenseId) {
+      await this.deleteLicense(instance.pjsLicenseId)
+    }
+    if (instance.puiLicenseId) {
+      await this.deleteLicense(instance.puiLicenseId)
+    }
   }
 
   private static parseModulesEnv(modules_string: string): number[] {
@@ -81,10 +110,13 @@ export class LicenseServiceImpl implements LicenseService {
     }
   }
 
-  private async createLicense(customerId: number): Promise<number> {
+  private async createLicense(
+    customerId: number,
+    product_id: number,
+  ): Promise<number> {
     const response = await axios.post(
       `${this.pllsEndpoint}${LicenseServiceImpl.LICENSE_PATH}${customerId}`,
-      this.buildLicensePayload(LicenseServiceImpl.LICENSE_SEATS),
+      this.buildLicensePayload(LicenseServiceImpl.LICENSE_SEATS, product_id),
       {
         headers: {
           Accept: 'application/json',
@@ -100,16 +132,20 @@ export class LicenseServiceImpl implements LicenseService {
     }
   }
 
-  private buildLicensePayload(licenseSeats: number) {
+  private buildLicensePayload(licenseSeats: number, product_id: number) {
+    const modules_env =
+      product_id === LicenseServiceImpl.PJS_PRODUCT_ID
+        ? this.pllsPJSModules
+        : this.pllsPUIModules
     return {
       license_type: 2,
       floating: {
         seats_entitled: licenseSeats,
         pulse_ttl: 86400,
       },
-      product_id: 1,
+      product_id,
       description: 'IBM Cloud License Key',
-      modules: this.pllsModules.map(pllsModule => {
+      modules: modules_env.map(pllsModule => {
         return {
           module_id: pllsModule,
           term_id: 1,
@@ -120,9 +156,9 @@ export class LicenseServiceImpl implements LicenseService {
     }
   }
 
-  private async deleteLicense(customerId: number) {
+  private async deleteLicense(licenseId: number) {
     await axios.delete(
-      `${this.pllsEndpoint}${LicenseServiceImpl.LICENSE_PATH}${customerId}`,
+      `${this.pllsEndpoint}${LicenseServiceImpl.LICENSE_PATH}${licenseId}`,
       {
         headers: {
           Accept: 'application/json',

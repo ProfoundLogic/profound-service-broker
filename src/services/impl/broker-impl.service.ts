@@ -14,7 +14,7 @@ import { CatalogUtil } from '../../utils/catalogUtil'
 import { ServiceInstanceStatus } from '../../enums/service-instance-status'
 import { OperationState } from '../../enums/operation-state'
 import AppDataSource from '../../db/data-source'
-import { FloatingLicense } from '../../models/floating-license.model'
+import { FloatingLicenses } from '../../models/floating-licenses.model'
 import { CatalogService } from '../catalog.service'
 import { LicenseService } from '../license.service'
 import { BillingService } from '../billing.service'
@@ -87,7 +87,7 @@ export class BrokerServiceImpl implements BrokerService {
         `Service Instance created: instanceId: ${instanceId} status: ${serviceInstance.status} planId: ${plan.id}`,
       )
 
-      const responseUrl = `${this.dashboardUrl}${BrokerServiceImpl.DASHBOARD_ROUTE}?instance_id=${instanceId}&authorization_code=${serviceInstance.authorizationCode}`
+      const responseUrl = `${this.dashboardUrl}${BrokerServiceImpl.DASHBOARD_ROUTE}?instance_id=${instanceId}&pjs_authorization_code=${serviceInstance.pjsAuthorizationCode}&pui_authorization_code=${serviceInstance.puiAuthorizationCode}`
 
       const response = plainToInstance(CreateServiceInstanceResponse, {
         dashboard_url: responseUrl,
@@ -110,7 +110,7 @@ export class BrokerServiceImpl implements BrokerService {
         throw new Error(`Cannot find service instance: ${instanceId}`)
       }
       await this.billingService.sendBillingForInstance(serviceInstance)
-      await this.licenseService.deprovisionFloatingLicense(instanceId)
+      await this.licenseService.deprovisionFloatingLicenses(serviceInstance)
       await serviceInstanceRepository.delete({ instanceId })
       delete this.lastOperationStatus[instanceId]
       return true
@@ -208,7 +208,7 @@ export class BrokerServiceImpl implements BrokerService {
 
   private getServiceInstanceEntity(
     request: CreateServiceInstanceRequest,
-    license: FloatingLicense,
+    license: FloatingLicenses,
     iamId: string,
     region: string,
   ): ServiceInstance {
@@ -216,7 +216,10 @@ export class BrokerServiceImpl implements BrokerService {
     instance.instanceId = request.instanceId ?? ''
     instance.name = request.context?.name ?? ''
     instance.serviceId = request.service_id
-    instance.authorizationCode = license.authorizationCode
+    instance.pjsLicenseId = license.pjsLicenseId
+    instance.puiLicenseId = license.puiLicenseId
+    instance.pjsAuthorizationCode = license.pjsAuthorizationCode
+    instance.puiAuthorizationCode = license.puiAuthorizationCode
     instance.planId = request.plan_id
     instance.iamId = iamId
     instance.region = region
