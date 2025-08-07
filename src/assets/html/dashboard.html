@@ -43,21 +43,14 @@
         });
       })
 
-      function copyToClipboardPJS() {
-        const authCode = $("#authCodePJS").text();
+      function copyToClipboard(product) {
+        const authCode = $(`#authCode${product}`).text();
         navigator.clipboard.writeText(authCode);
         setTimeout(() => {
-          bootstrap.Tooltip.getInstance("#copyBtnPJS").hide();
+          bootstrap.Tooltip.getInstance(`#copyBtn${product}`).hide();
         }, 2000);
       }
 
-      function copyToClipboardPUI() {
-        const authCode = $("#authCodePUI").text();
-        navigator.clipboard.writeText(authCode);
-        setTimeout(() => {
-          bootstrap.Tooltip.getInstance("#copyBtnPUI").hide();
-        }, 2000);
-      }
     </script>
 
   </body>
