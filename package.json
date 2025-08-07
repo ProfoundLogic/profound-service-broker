@@ -1,11 +1,11 @@
 {
-  "name": "onboarding-osb-node",
+  "name": "service-broker",
   "version": "1.0.0",
-  "description": "Open Service Broker Reference App",
+  "description": "Profound Logic Service Broker",
   "private": true,
   "repository": {
     "type": "git",
-    "url": "https://github.com/IBM/onboarding-osb-node.git"
+    "url": "https://github.com/ProfoundLogic/profound-service-broker.git"
   },
   "keywords": [],
   "license": "Apache-2.0",
