@@ -42,7 +42,8 @@ export async function getBillingFailureEmailContent(
   return {
     subject: `[Service Broker ${product}] Billing for ${failures.length} instances failed`,
     html: failures.reduce((content, failure) => {
-      return (content += `<p>${failure.message}</p>`)
+      content += `<p>${failure.message}</p>`
+      return content
     }, ''),
   }
 }
