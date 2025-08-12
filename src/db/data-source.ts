@@ -2,8 +2,16 @@ import path from 'node:path'
 import 'dotenv/config'
 import { DataSource, DataSourceOptions } from 'typeorm'
 
-const { DB_CERT, DB_HOST, DB_PORT, DB_USER, DB_USER_PWD, DB_NAME, NODE_ENV } =
-  process.env
+const {
+  DB_CERT,
+  DB_HOST,
+  DB_PORT,
+  DB_USER,
+  DB_USER_PWD,
+  DB_NAME,
+  DB_CONNECT_TIMEOUT,
+  NODE_ENV,
+} = process.env
 
 const connectionOptions: DataSourceOptions = {
   type: 'postgres',
@@ -23,6 +31,9 @@ const connectionOptions: DataSourceOptions = {
         ca: DB_CERT,
       }
     : undefined,
+  extra: {
+    connectionTimeoutMillis: parseInt(DB_CONNECT_TIMEOUT || '10000', 10),
+  },
 }
 
 const AppDataSource = new DataSource(connectionOptions)
