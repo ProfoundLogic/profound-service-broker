@@ -1,9 +1,9 @@
 import path from 'node:path'
 import 'dotenv/config'
 import { DataSource, DataSourceOptions } from 'typeorm'
+import { readFileSync } from 'node:fs'
 
 const {
-  DB_CERT,
   DB_HOST,
   DB_PORT,
   DB_USER,
@@ -25,12 +25,15 @@ const connectionOptions: DataSourceOptions = {
   entities: [path.join(__dirname, 'entities/**/*.{ts,js}')],
   migrations: [path.join(__dirname, 'migrations/**/*.{ts,js}')],
   subscribers: [path.join(__dirname, 'subscribers/**/*.{ts,js}')],
-  ssl: DB_CERT
-    ? {
-        rejectUnauthorized: false,
-        ca: DB_CERT,
-      }
-    : undefined,
+  ssl:
+    NODE_ENV === 'production'
+      ? {
+          rejectUnauthorized: false,
+          ca: readFileSync(
+            path.join(__dirname, '..', 'assets', 'us-east-1-bundle.pem'),
+          ),
+        }
+      : undefined,
   extra: {
     connectionTimeoutMillis: parseInt(DB_CONNECT_TIMEOUT || '10000', 10),
   },
