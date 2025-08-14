@@ -4,8 +4,10 @@ FROM node:20 AS builder
 WORKDIR /usr/src/app
 COPY package.json yarn.lock tsconfig.json ./
 RUN yarn install
-COPY src src
+COPY src ./src
 RUN npm run build
+RUN mkdir -p dist/assets && cp -r src/assets/* dist/assets/
+RUN mkdir -p dist/certs && cp -r src/certs/* dist/certs/
 
 FROM node:20
 

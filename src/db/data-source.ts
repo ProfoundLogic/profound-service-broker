@@ -30,7 +30,7 @@ const connectionOptions: DataSourceOptions = {
       ? {
           rejectUnauthorized: false,
           ca: readFileSync(
-            path.join(__dirname, '..', 'assets', 'us-east-1-bundle.pem'),
+            path.join(__dirname, '..', 'certs', 'us-east-1-bundle.pem'),
           ),
         }
       : undefined,
