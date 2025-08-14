@@ -1,5 +1,5 @@
 # Use the official Node.js image as the base image
-FROM node:20 as builder
+FROM node:20 AS builder
 
 WORKDIR /usr/src/app
 COPY package.json yarn.lock tsconfig.json ./
