@@ -6,8 +6,8 @@ COPY package.json yarn.lock tsconfig.json ./
 RUN yarn install
 COPY src ./src
 RUN npm run build
-RUN mkdir -p dist/assets && cp -r src/assets/* dist/assets/
-RUN mkdir -p dist/certs && cp -r src/certs/* dist/certs/
+COPY src/assets ./dest/assets
+COPY src/certs ./dest/certs
 
 FROM node:20
 

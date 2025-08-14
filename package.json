@@ -11,8 +11,8 @@
   "license": "Apache-2.0",
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "yarn clean && tsc && cp -R src/assets dist/assets",
-    "start": "yarn clean && tsc && cp -R src/assets dist/assets && node dist/src/app.js",
+    "build": "yarn clean && tsc && cp -R src/assets dist/assets && cp -R src/certs dist/certs",
+    "start": "yarn clean && tsc && cp -R src/assets dist/assets && cp -R src/certs dist/certs && node dist/src/app.js",
     "start:dev": "nodemon --signal SIGINT --nolazy --watch src --exec 'node --inspect=0.0.0.0:9229 --require ts-node/register src/app.ts'",
     "watch": "tsc -w",
     "test": "NODE_ENV=development jest --runInBand --detectOpenHandles",
