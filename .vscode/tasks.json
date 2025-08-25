@@ -4,7 +4,7 @@
     {
       "label": "docker-compose-up",
       "type": "shell",
-      "command": "docker compose up --build --no-deps --force-recreate",
+      "command": "sudo docker compose up --build --no-deps --force-recreate",
       "isBackground": true,
       "problemMatcher": [
         {
