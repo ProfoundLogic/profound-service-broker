@@ -28,7 +28,6 @@ const connectionOptions: DataSourceOptions = {
   ssl:
     NODE_ENV === 'production'
       ? {
-          rejectUnauthorized: false,
           ca: readFileSync(
             path.join(__dirname, '..', 'certs', 'us-east-1-bundle.pem'),
           ),
