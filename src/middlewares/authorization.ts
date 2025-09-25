@@ -26,7 +26,11 @@ export class Authenticator {
   }
 
   constructor({ allowlistedIds }: AuthenticatorParams) {
-    this.allowlistedIds = new Set(allowlistedIds)
+    this.allowlistedIds = new Set(
+      allowlistedIds.map(id => {
+        return `crn-${id}`
+      }),
+    )
   }
 
   private async fetchIdentityKeys(): Promise<JsonWebKey[]> {
@@ -121,7 +125,7 @@ export class Authenticator {
     // More authentication types can be supported here
     // Removed support for Basic and Bearer authTypes as they are deprecated
     switch (authType.toLowerCase()) {
-      case 'bearer-crn':
+      case 'bearer':
         if (!this.authorizeBearerCredential(credentials)) {
           return res.sendStatus(403)
         }
