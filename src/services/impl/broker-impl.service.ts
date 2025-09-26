@@ -69,12 +69,12 @@ export class BrokerServiceImpl implements BrokerService {
         throw new Error(`Invalid plan id: ${createServiceRequest.plan_id}`)
       }
 
-      const floatingLicense =
-        await this.licenseService.provisionFloatingLicense(instanceId)
+      const floatingLicenses =
+        await this.licenseService.provisionFloatingLicenses(instanceId)
 
       const serviceInstance = this.getServiceInstanceEntity(
         createServiceRequest,
-        floatingLicense,
+        floatingLicenses,
         iamId,
         region,
       )

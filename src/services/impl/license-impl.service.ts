@@ -2,6 +2,7 @@ import axios from 'axios'
 import { FloatingLicenses } from '../../models/floating-licenses.model'
 import { LicenseService } from '../license.service'
 import { ServiceInstance } from '../../db/entities/service-instance.entity'
+import { createHash } from 'crypto'
 
 export class LicenseServiceImpl implements LicenseService {
   private pllsEndpoint = process.env.PLLS_URL || ''
@@ -40,7 +41,7 @@ export class LicenseServiceImpl implements LicenseService {
   private static readonly PJS_PRODUCT_ID = 1
   private static readonly PUI_PRODUCT_ID = 2
 
-  async provisionFloatingLicense(
+  async provisionFloatingLicenses(
     instanceId: string,
   ): Promise<FloatingLicenses> {
     const customerName = this.getCustomerName(instanceId)
@@ -105,8 +106,11 @@ export class LicenseServiceImpl implements LicenseService {
     )
   }
 
-  private getCustomerName(instanceId: string): string {
-    return `IBMCloud${instanceId}`
+  private getCustomerName(crnInstanceId: string): string {
+    const instanceHash = createHash('sha256')
+      .update(crnInstanceId)
+      .digest('hex')
+    return `IBMCloud-${instanceHash}`
   }
 
   private getHeaders(): any {
