@@ -8,7 +8,7 @@ import { ServiceInstance } from '../../db/entities/service-instance.entity'
 export class DashboardServiceImpl implements DashboardService {
   private assetPath = path.join(__dirname, '..', '..', 'assets', 'html')
 
-  public async buildDashboard(instanceId: string): Promise<string> {
+  public async buildDashboard(instanceId: number): Promise<string> {
     const dashboardPath = path.join(this.assetPath, 'dashboard.html')
     try {
       const { pjsAuthorizationCode, puiAuthorizationCode } =
@@ -28,11 +28,11 @@ export class DashboardServiceImpl implements DashboardService {
     }
   }
 
-  private async getAuthorizationCodes(instanceId: string) {
+  private async getAuthorizationCodes(instanceId: number) {
     const serviceInstanceRepository =
       AppDataSource.getRepository(ServiceInstance)
     const serviceInstance = await serviceInstanceRepository.findOneBy({
-      instanceId,
+      id: instanceId,
     })
     if (serviceInstance === null) {
       throw new Error(`Instance ${instanceId} not found`)

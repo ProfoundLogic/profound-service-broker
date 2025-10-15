@@ -20,7 +20,8 @@ import { LicenseService } from '../license.service'
 import { BillingService } from '../billing.service'
 
 export class BrokerServiceImpl implements BrokerService {
-  dashboardUrl: string = process.env.BROKER_URL || 'http://localhost:8080'
+  dashboardUrl: string =
+    `${process.env.BROKER_URL}:${process.env.PORT}` || 'http://localhost:3000'
 
   lastOperationStatus: { [instanceId: string]: OperationState } = {}
 
@@ -72,7 +73,7 @@ export class BrokerServiceImpl implements BrokerService {
       const floatingLicenses =
         await this.licenseService.provisionFloatingLicenses(instanceId)
 
-      const serviceInstance = this.getServiceInstanceEntity(
+      let serviceInstance = this.getServiceInstanceEntity(
         createServiceRequest,
         floatingLicenses,
         iamId,
@@ -81,13 +82,13 @@ export class BrokerServiceImpl implements BrokerService {
 
       const serviceInstanceRepository =
         AppDataSource.getRepository(ServiceInstance)
-      await serviceInstanceRepository.save(serviceInstance)
+      serviceInstance = await serviceInstanceRepository.save(serviceInstance)
 
       logger.info(
         `Service Instance created: instanceId: ${instanceId} status: ${serviceInstance.status} planId: ${plan.id}`,
       )
 
-      const responseUrl = `${this.dashboardUrl}${BrokerServiceImpl.DASHBOARD_ROUTE}?instance_id=${instanceId}`
+      const responseUrl = `${this.dashboardUrl}${BrokerServiceImpl.DASHBOARD_ROUTE}?id=${serviceInstance.id}`
 
       const response = plainToInstance(CreateServiceInstanceResponse, {
         dashboard_url: responseUrl,

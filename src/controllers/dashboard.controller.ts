@@ -11,7 +11,7 @@ export class DashboardController {
     next,
   ): Promise<void> => {
     try {
-      const instanceId = req.query.instance_id as string
+      const instanceId = parseInt(req.query.id as string, 10)
 
       logger.info(`Request received: GET /dashboard`)
 

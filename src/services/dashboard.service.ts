@@ -1,3 +1,3 @@
 export interface DashboardService {
-  buildDashboard(instanceId: string): Promise<string>
+  buildDashboard(instanceId: number): Promise<string>
 }

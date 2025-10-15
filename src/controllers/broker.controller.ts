@@ -4,6 +4,7 @@ import logger from '../utils/logger'
 import BrokerUtil from '../utils/brokerUtil'
 import { OperationState } from '../enums/operation-state'
 import AsyncRequiredError from '../errors/async-required-error'
+import { instanceToPlain } from 'class-transformer'
 
 export class BrokerController {
   constructor(private brokerService: BrokerService) {}
@@ -38,12 +39,14 @@ export class BrokerController {
         )
       }
 
-      const response = await this.brokerService.provision(
+      const provisionResponse = await this.brokerService.provision(
         instanceId,
         req.body,
         iamId,
         bluemixRegion,
       )
+
+      const response = instanceToPlain(provisionResponse)
 
       logger.info(
         `Create Service Instance Response status: 201, body: ${JSON.stringify(response)}`,
