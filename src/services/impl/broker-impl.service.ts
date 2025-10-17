@@ -20,8 +20,7 @@ import { LicenseService } from '../license.service'
 import { BillingService } from '../billing.service'
 
 export class BrokerServiceImpl implements BrokerService {
-  dashboardUrl: string =
-    `${process.env.BROKER_URL}:${process.env.PORT}` || 'http://localhost:3000'
+  dashboardUrl: string = BrokerServiceImpl.getDashboardURL()
 
   lastOperationStatus: { [instanceId: string]: OperationState } = {}
 
@@ -232,5 +231,13 @@ export class BrokerServiceImpl implements BrokerService {
     instance.updateDate = new Date()
 
     return instance
+  }
+
+  private static getDashboardURL(): string {
+    let dashboardUrl = process.env.BROKER_URL || 'localhost'
+    if (process.env.NODE_ENV === 'development') {
+      dashboardUrl += `:${process.env.PORT || '3000'}`
+    }
+    return dashboardUrl
   }
 }
