@@ -3,7 +3,7 @@ import { SupportInfoController } from '../controllers/support-info.controller'
 import { SupportInfoServiceImpl } from '../services/impl/support-info-impl.service'
 
 export class SupportInfoRoutes {
-  static get routes(): Router {
+  static routes(): Router {
     const router = Router()
 
     const service = new SupportInfoServiceImpl()

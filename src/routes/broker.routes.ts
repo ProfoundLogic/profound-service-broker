@@ -7,7 +7,7 @@ import { IAMServiceImpl } from '../services/impl/iam-impl.service'
 import { BillingServiceImpl } from '../services/impl/billing-impl.service'
 
 export class BrokerRoutes {
-  static get routes(): Router {
+  static routes(): Router {
     const router = Router()
 
     const IAMService = new IAMServiceImpl()

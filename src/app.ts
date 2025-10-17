@@ -1,6 +1,6 @@
 import 'dotenv/config'
 import 'reflect-metadata'
-import express, { NextFunction, Request, Response } from 'express'
+import express, { Request, Response } from 'express'
 
 import AppDataSource from './db/data-source'
 import logger from './utils/logger'
@@ -8,7 +8,6 @@ import logger from './utils/logger'
 import { errorHandler } from './middlewares/error-middleware'
 import { loggerMiddleware } from './middlewares/logger-middleware'
 import { notFoundMiddleware } from './middlewares/not-found-middleware'
-import { Authenticator } from './middlewares/authorization'
 
 import { AppRoutes } from './routes/routes'
 import { BillingServiceImpl } from './services/impl/billing-impl.service'
@@ -34,8 +33,6 @@ logger.info(`App Build Number: ${process.env.APP_BUILD_NUMBER}`)
 
 export const app = express()
 
-app.use(express.json())
-
 // Use logger middleware
 app.use(loggerMiddleware)
 
@@ -51,22 +48,9 @@ export const startServer = async () => {
     await AppDataSource.initialize()
     logger.info('Data Source has been initialized!')
 
-    const authenticator = await Authenticator.build({
-      allowlistedIds: (process.env.BROKER_BEARER_IDENTITIES as string)?.split(
-        ',',
-      ),
-    })
-
     billingService.startJob()
 
-    app.use(authenticator.authorizeRequest)
-
-    app.use(AppRoutes.routes)
-
-    app.use((req: Request, res: Response, next: NextFunction) => {
-      res.setHeader('Content-Type', 'application/json')
-      next()
-    })
+    app.use(await AppRoutes.routes())
 
     // Catch-all for unmatched routes
     app.use('*', notFoundMiddleware)

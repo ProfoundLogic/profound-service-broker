@@ -1,15 +1,13 @@
 import { Router } from 'express'
-import { BrokerRoutes } from './broker.routes'
-import { SupportInfoRoutes } from './support-info.routes'
 import { DashboardRoutes } from './dashboard.routes'
+import { ApiRoutes } from './api-routes'
 
 export class AppRoutes {
-  static get routes(): Router {
+  static async routes(): Promise<Router> {
     const router = Router()
 
-    router.use('/', BrokerRoutes.routes)
-    router.use('/', SupportInfoRoutes.routes)
-    router.use('/', DashboardRoutes.routes)
+    router.use('/dashboard', DashboardRoutes.routes())
+    router.use('/', await ApiRoutes.routes())
 
     return router
   }
