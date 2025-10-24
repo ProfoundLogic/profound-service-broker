@@ -52,11 +52,11 @@ export class BillingServiceImpl implements BillingService {
   private createMeteringPayload(
     serviceInstance: ServiceInstance,
   ): MeteringPayload {
-    const instant = Date.now()
+    const instant = Date.now() // TODO: FIGURE OUT CORRECT VALUE FOR THIS
     return {
       planId: serviceInstance.planId,
       resourceInstanceId: serviceInstance.instanceId,
-      start: instant - 3600000,
+      start: instant,
       end: instant,
       region: serviceInstance.region,
       measuredUsage: [
