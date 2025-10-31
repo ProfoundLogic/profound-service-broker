@@ -39,7 +39,7 @@ export class BillingServiceImpl implements BillingService {
   public async sendBillingForInstance(
     serviceInstance: ServiceInstance,
   ): Promise<void> {
-    const payload = this.createMeteringPayload(serviceInstance)
+    const payload = this.createMeteringPayload(serviceInstance, true)
     const iamAccessToken = await this.IAMService.getAccessToken()
     const failures = await this.sendUsageDataToApi(iamAccessToken, [payload])
     if (failures.length > 0) {
@@ -51,13 +51,17 @@ export class BillingServiceImpl implements BillingService {
 
   private createMeteringPayload(
     serviceInstance: ServiceInstance,
+    manualRequest: boolean,
   ): MeteringPayload {
-    const instant = Date.now() // TODO: FIGURE OUT CORRECT VALUE FOR THIS
+    const monthStart = BillingServiceImpl.getMonthStart(
+      manualRequest,
+      serviceInstance.createDate,
+    )
     return {
       planId: serviceInstance.planId,
       resourceInstanceId: serviceInstance.instanceId,
-      start: instant,
-      end: instant,
+      start: monthStart.getTime(),
+      end: monthStart.getTime(),
       region: serviceInstance.region,
       measuredUsage: [
         {
@@ -66,6 +70,27 @@ export class BillingServiceImpl implements BillingService {
         },
       ],
     }
+  }
+
+  static getMonthStart(manualRequest: boolean, createDate: Date): Date {
+    let monthStart = new Date()
+
+    // Set month start to the first day of the month
+    monthStart.setDate(1)
+
+    // If billing is requested from the monthly CRON job,
+    // then set the start month to the previous month
+    if (!manualRequest) {
+      monthStart.setMonth(monthStart.getMonth() - 1)
+    }
+
+    // If the requested billing start date is older than the creation date of the instance,
+    // then use the creation date with a couple hours of buffer
+    if (monthStart < createDate) {
+      monthStart = createDate
+      monthStart.setHours(monthStart.getHours() + 2)
+    }
+    return monthStart
   }
 
   private async billingJob(): Promise<void> {
@@ -115,7 +140,7 @@ export class BillingServiceImpl implements BillingService {
         AppDataSource.getRepository(ServiceInstance)
       const instances = await serviceInstanceRepository.find()
       failures = instances.map(instance => {
-        const payload = this.createMeteringPayload(instance)
+        const payload = this.createMeteringPayload(instance, false)
         return this.getBillingFailureEntity(payload, 'Initial billing failure')
       })
     }
