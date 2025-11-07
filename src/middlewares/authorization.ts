@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 import axios from 'axios'
 
 import logger from '../utils/logger'
+import { IAuthenticator } from '../utils/authenticatorUtil'
 
 const KEYS_ENDPOINT = `${process.env.IAM_ENDPOINT as string}/identity/keys`
 
@@ -14,7 +15,7 @@ interface identityKeysResponse {
 interface AuthenticatorParams {
   allowlistedIds: string[]
 }
-export class Authenticator {
+export class Authenticator implements IAuthenticator {
   private publicKeys: JsonWebKey[] = []
   private allowlistedIds: Set<string>
   private intervalHandle: NodeJS.Timeout | undefined
