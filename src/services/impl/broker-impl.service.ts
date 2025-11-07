@@ -109,7 +109,10 @@ export class BrokerServiceImpl implements BrokerService {
       if (serviceInstance === null) {
         throw new Error(`Cannot find service instance: ${instanceId}`)
       }
-      await this.billingService.sendBillingForInstance(serviceInstance)
+      await this.billingService.sendBillingForInstance(serviceInstance, {
+        manualRequest: true,
+        test: false,
+      })
       await this.licenseService.deprovisionFloatingLicenses(serviceInstance)
       await serviceInstanceRepository.delete({ instanceId })
       delete this.lastOperationStatus[instanceId]

@@ -1,7 +1,7 @@
 import { CronJob } from 'cron'
 import AppDataSource from '../../db/data-source'
 import { ServiceInstance } from '../../db/entities/service-instance.entity'
-import { BillingService } from '../billing.service'
+import { BillingRequestParams, BillingService } from '../billing.service'
 import { MeteringPayload } from '../../models/metering-payload.model'
 import axios, { AxiosError, AxiosResponse } from 'axios'
 import logger from '../../utils/logger'
@@ -9,6 +9,7 @@ import { IAMService } from '../iam.service'
 import { BillingFailure } from '../../db/entities/billing-failure.entity'
 import { FindManyOptions, FindOptionsOrder, Repository } from 'typeorm'
 import { getBillingFailureEmailContent, sendEmail } from '../../utils/emailUtil'
+import { instanceToPlain } from 'class-transformer'
 
 export class BillingServiceImpl implements BillingService {
   private job: CronJob
@@ -38,8 +39,9 @@ export class BillingServiceImpl implements BillingService {
 
   public async sendBillingForInstance(
     serviceInstance: ServiceInstance,
+    params: BillingRequestParams = { manualRequest: true, test: false },
   ): Promise<void> {
-    const payload = this.createMeteringPayload(serviceInstance, true)
+    const payload = this.createMeteringPayload(serviceInstance, params)
     const iamAccessToken = await this.IAMService.getAccessToken()
     const failures = await this.sendUsageDataToApi(iamAccessToken, [payload])
     if (failures.length > 0) {
@@ -51,28 +53,30 @@ export class BillingServiceImpl implements BillingService {
 
   private createMeteringPayload(
     serviceInstance: ServiceInstance,
-    manualRequest: boolean,
+    params: BillingRequestParams,
   ): MeteringPayload {
     const monthStart = BillingServiceImpl.getMonthStart(
-      manualRequest,
       serviceInstance.createDate,
+      params,
     )
-    return {
-      planId: serviceInstance.planId,
-      resourceInstanceId: serviceInstance.instanceId,
-      start: monthStart.getTime(),
-      end: monthStart.getTime(),
-      region: serviceInstance.region,
-      measuredUsage: [
+    const quantity = params.test ? 0 : 1
+    const payload = new MeteringPayload(
+      serviceInstance.planId,
+      serviceInstance.instanceId,
+      monthStart.getTime(),
+      monthStart.getTime(),
+      serviceInstance.region,
+      [
         {
           measure: 'INSTANCE',
-          quantity: 1,
+          quantity,
         },
       ],
-    }
+    )
+    return payload
   }
 
-  static getMonthStart(manualRequest: boolean, createDate: Date): Date {
+  static getMonthStart(createDate: Date, params: BillingRequestParams): Date {
     let monthStart = new Date()
 
     // Set month start to the first day of the month
@@ -80,7 +84,7 @@ export class BillingServiceImpl implements BillingService {
 
     // If billing is requested from the monthly CRON job,
     // then set the start month to the previous month
-    if (!manualRequest) {
+    if (!params.manualRequest) {
       monthStart.setMonth(monthStart.getMonth() - 1)
     }
 
@@ -95,22 +99,30 @@ export class BillingServiceImpl implements BillingService {
 
   private async billingJob(): Promise<void> {
     const billingFailureRepository = AppDataSource.getRepository(BillingFailure)
-    await this.fillFailureDB(billingFailureRepository)
-    const success = await this.retryThreeTimes(async () => {
-      const iamAccessToken = await this.IAMService.getAccessToken()
-      const failures = await this.attemptBilling(
-        iamAccessToken,
-        billingFailureRepository,
-      )
-      if (failures.length === 0) {
-        await billingFailureRepository.clear()
-        return true
+    try {
+      await this.fillFailureDB(billingFailureRepository)
+      const success = await this.retryThreeTimes(async () => {
+        const iamAccessToken = await this.IAMService.getAccessToken()
+        const failures = await this.attemptBilling(
+          iamAccessToken,
+          billingFailureRepository,
+        )
+        if (failures.length === 0) {
+          await billingFailureRepository.clear()
+          return true
+        }
+        await this.fillFailureDB(billingFailureRepository, failures)
+        return false
+      })
+      if (success) {
+        return
       }
-      await this.fillFailureDB(billingFailureRepository, failures)
-      return false
-    })
-    if (success) return
-    await this.sendEmail(billingFailureRepository)
+    } catch (error) {
+      try {
+        await this.sendEmail(billingFailureRepository)
+        // eslint-disable-next-line no-empty
+      } catch (_) {}
+    }
   }
 
   private async retryThreeTimes(func: Function) {
@@ -140,7 +152,10 @@ export class BillingServiceImpl implements BillingService {
         AppDataSource.getRepository(ServiceInstance)
       const instances = await serviceInstanceRepository.find()
       failures = instances.map(instance => {
-        const payload = this.createMeteringPayload(instance, false)
+        const payload = this.createMeteringPayload(instance, {
+          manualRequest: false,
+          test: false,
+        })
         return this.getBillingFailureEntity(payload, 'Initial billing failure')
       })
     }
@@ -198,10 +213,13 @@ export class BillingServiceImpl implements BillingService {
         this.resourceID,
       ),
     )
+    const body = payloads.map(payload => {
+      return instanceToPlain(payload)
+    })
     try {
-      const response = await axios.post(url, payloads, {
+      const response = await axios.post(url, body, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': token,
           'Content-Type': 'application/json',
         },
       })
