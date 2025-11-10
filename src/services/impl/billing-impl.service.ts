@@ -39,7 +39,7 @@ export class BillingServiceImpl implements BillingService {
 
   public async sendBillingForInstance(
     serviceInstance: ServiceInstance,
-    params: BillingRequestParams = { manualRequest: true, test: false },
+    params: BillingRequestParams,
   ): Promise<void> {
     const payload = this.createMeteringPayload(serviceInstance, params)
     const iamAccessToken = await this.IAMService.getAccessToken()
