@@ -10,8 +10,8 @@ export class AdminServiceImpl implements AdminService {
   sendTestEmail(): Promise<void> {
     throw new Error('Method not implemented.')
   }
-  runMigrations(): Promise<void> {
-    throw new Error('Method not implemented.')
+  async runMigrations(): Promise<void> {
+    await AppDataSource.runMigrations()
   }
   retryBilling(): Promise<void> {
     throw new Error('Method not implemented.')
