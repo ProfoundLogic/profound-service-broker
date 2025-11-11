@@ -1,14 +1,28 @@
 import AppDataSource from '../../db/data-source'
+import { BillingFailure } from '../../db/entities/billing-failure.entity'
 import { ServiceInstance } from '../../db/entities/service-instance.entity'
 import NotFoundError from '../../errors/not-found-error'
+import { getBillingFailureEmailContent, sendEmail } from '../../utils/emailUtil'
 import { AdminService } from '../admin.service'
 import { BillingService, BillingRequestParams } from '../billing.service'
 
 export class AdminServiceImpl implements AdminService {
   constructor(private billingService: BillingService) {}
 
-  sendTestEmail(): Promise<void> {
-    throw new Error('Method not implemented.')
+  async sendTestEmail(): Promise<void> {
+    const failure1 = new BillingFailure()
+    failure1.id = 1
+    failure1.message = 'Billing for instance 1 failed'
+    failure1.payload = '{}'
+    const failure2 = new BillingFailure()
+    failure2.id = 2
+    failure2.message = 'Billing for instance 2 failed'
+    failure2.payload = '{}'
+    const emailOptions = await getBillingFailureEmailContent([
+      failure1,
+      failure2,
+    ])
+    await sendEmail(emailOptions)
   }
   async runMigrations(): Promise<void> {
     await AppDataSource.runMigrations()
