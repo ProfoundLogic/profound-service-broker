@@ -16,7 +16,7 @@ export class AdminAuthenticator implements IAuthenticator {
     }
 
     if (!(await validate(apiKey))) {
-      return res.send(404).end()
+      return res.sendStatus(404).end()
     }
 
     next()
