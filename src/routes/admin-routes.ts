@@ -20,7 +20,7 @@ export class AdminRoutes {
     )
     const controller = new AdminController(service)
 
-    router.post('/email-test', controller.sendTestEmail)
+    router.post('/notification-test', controller.sendTestNotification)
     router.post('/migrate', controller.runMigrations)
     router.post('/retry-billing', controller.retryBilling)
     router.post('/submit-billing', controller.submitBilling)

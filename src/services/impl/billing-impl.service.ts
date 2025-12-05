@@ -8,7 +8,10 @@ import logger from '../../utils/logger'
 import { IAMService } from '../iam.service'
 import { BillingFailure } from '../../db/entities/billing-failure.entity'
 import { FindManyOptions, FindOptionsOrder, Repository } from 'typeorm'
-import { getBillingFailureEmailContent, sendEmail } from '../../utils/emailUtil'
+import {
+  getBillingFailureNotificationBody,
+  notify,
+} from '../../utils/notificationUtil'
 import { instanceToPlain } from 'class-transformer'
 
 export class BillingServiceImpl implements BillingService {
@@ -119,7 +122,7 @@ export class BillingServiceImpl implements BillingService {
       }
     } catch (error) {
       try {
-        await this.sendEmail(billingFailureRepository)
+        await this.sendNotification(billingFailureRepository)
         // eslint-disable-next-line no-empty
       } catch (_) {}
     }
@@ -134,13 +137,13 @@ export class BillingServiceImpl implements BillingService {
     return false
   }
 
-  private async sendEmail(
+  private async sendNotification(
     billingFailureRepository: Repository<BillingFailure>,
   ) {
-    const options = await getBillingFailureEmailContent(
+    const options = await getBillingFailureNotificationBody(
       await billingFailureRepository.find(),
     )
-    await sendEmail(options)
+    await notify(options)
   }
 
   private async fillFailureDB(

@@ -2,14 +2,17 @@ import AppDataSource from '../../db/data-source'
 import { BillingFailure } from '../../db/entities/billing-failure.entity'
 import { ServiceInstance } from '../../db/entities/service-instance.entity'
 import NotFoundError from '../../errors/not-found-error'
-import { getBillingFailureEmailContent, sendEmail } from '../../utils/emailUtil'
+import {
+  getBillingFailureNotificationBody,
+  notify,
+} from '../../utils/notificationUtil'
 import { AdminService } from '../admin.service'
 import { BillingService, BillingRequestParams } from '../billing.service'
 
 export class AdminServiceImpl implements AdminService {
   constructor(private billingService: BillingService) {}
 
-  async sendTestEmail(): Promise<void> {
+  async sendTestNotification(): Promise<void> {
     const failure1 = new BillingFailure()
     failure1.id = 1
     failure1.message = 'Billing for instance 1 failed'
@@ -18,11 +21,11 @@ export class AdminServiceImpl implements AdminService {
     failure2.id = 2
     failure2.message = 'Billing for instance 2 failed'
     failure2.payload = '{}'
-    const emailOptions = await getBillingFailureEmailContent([
+    const emailOptions = await getBillingFailureNotificationBody([
       failure1,
       failure2,
     ])
-    await sendEmail(emailOptions)
+    await notify(emailOptions)
   }
   async runMigrations(): Promise<void> {
     await AppDataSource.runMigrations()

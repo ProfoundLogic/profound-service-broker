@@ -5,13 +5,13 @@ import { AdminService } from '../services/admin.service'
 export class AdminController {
   constructor(private adminService: AdminService) {}
 
-  public sendTestEmail: RequestHandler = async (
+  public sendTestNotification: RequestHandler = async (
     req,
     res,
     next,
   ): Promise<void> => {
     try {
-      await this.adminService.sendTestEmail()
+      await this.adminService.sendTestNotification()
       res.status(200).send({ success: true })
     } catch (error) {
       logger.error(`Error sending email: ${error}`)
