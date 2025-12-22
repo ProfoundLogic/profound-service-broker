@@ -1,3 +1,4 @@
+import { BillingFailure } from '../db/entities/billing-failure.entity'
 import { ServiceInstance } from '../db/entities/service-instance.entity'
 
 export interface BillingRequestParams {
@@ -10,6 +11,7 @@ export interface BillingService {
     serviceInstance: ServiceInstance,
     params: BillingRequestParams,
   ): Promise<void>
+  adminRetryBilling(): Promise<BillingFailure[]>
   startJob(): void
   stopJob(): void
 }

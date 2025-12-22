@@ -39,8 +39,15 @@ export class AdminController {
     next,
   ): Promise<void> => {
     try {
-      await this.adminService.retryBilling()
-      res.status(200).send({ success: true })
+      const failures = await this.adminService.retryBilling()
+      if (failures.length === 0) {
+        res.status(200).send({ success: true })
+      } else {
+        res.status(500).send({
+          success: false,
+          failures: failures.map(failure => JSON.stringify(failure)),
+        })
+      }
     } catch (error) {
       logger.error(`Error attempting billing: ${error}`)
       next(error)

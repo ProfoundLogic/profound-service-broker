@@ -54,6 +54,12 @@ export class BillingServiceImpl implements BillingService {
     }
   }
 
+  public async adminRetryBilling(): Promise<BillingFailure[]> {
+    const iamAccessToken = await this.IAMService.getAccessToken()
+    const billingFailureRepository = AppDataSource.getRepository(BillingFailure)
+    return await this.attemptBilling(iamAccessToken, billingFailureRepository)
+  }
+
   private createMeteringPayload(
     serviceInstance: ServiceInstance,
     params: BillingRequestParams,
@@ -168,7 +174,7 @@ export class BillingServiceImpl implements BillingService {
     }
   }
 
-  private async attemptBilling(
+  public async attemptBilling(
     iamAccessToken: string,
     billingFailureRepository: Repository<BillingFailure>,
   ): Promise<BillingFailure[]> {

@@ -30,8 +30,8 @@ export class AdminServiceImpl implements AdminService {
   async runMigrations(): Promise<void> {
     await AppDataSource.runMigrations()
   }
-  retryBilling(): Promise<void> {
-    throw new Error('Method not implemented.')
+  async retryBilling(): Promise<BillingFailure[]> {
+    return await this.billingService.adminRetryBilling()
   }
   async submitBilling(instanceId: string, test: boolean): Promise<void> {
     const params: BillingRequestParams = { manualRequest: true, test }
